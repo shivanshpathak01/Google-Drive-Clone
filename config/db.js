@@ -1,18 +1,10 @@
 const mongoose = require('mongoose');
 
-// Make sure the environment variable is loaded
-require('dotenv').config();
 
-const dbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/yourdbname'; // Default to local MongoDB
-
-const connectToDB = async () => {
-  try {
-    console.log('Connecting to MongoDB with URI:', dbURI);
-    await mongoose.connect('mongodb://localhost:27017/X-Drive',);
-    console.log('Connected to MongoDB');
-  } catch (err) {
-    console.error('Error connecting to MongoDB:', err);
+function connectToDB(){
+    mongoose.connect(process.env.MONGO_URI).then(()=>{
+      console.log('Connected to MongoDB');
+    })
   }
-};
 
 module.exports = connectToDB;
