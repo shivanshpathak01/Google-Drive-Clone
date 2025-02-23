@@ -1,7 +1,6 @@
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
-const { storage, ID } = require("../config/appwrite.config"); // Appwrite setup
 
 // Ensure uploads directory exists
 const uploadDir = "uploads/";
@@ -40,28 +39,4 @@ const upload = multer({
     }
 });
 
-// Upload to Appwrite
-const uploadToAppwrite = async (req, res, next) => {
-    if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    try {
-        const response = await storage.createFile(
-            process.env.APPWRITE_BUCKET_ID,
-            ID.unique(),
-            fs.createReadStream(req.file.path)
-        );
-
-        // Delete the local file after successful upload
-        fs.unlinkSync(req.file.path);
-
-        req.fileId = response.$id; // Store Appwrite file ID in request
-        next();
-    } catch (error) {
-        console.error("File upload error:", error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-module.exports = { upload, uploadToAppwrite };
+module.exports = { upload }; 

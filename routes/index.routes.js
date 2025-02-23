@@ -1,6 +1,6 @@
 const express = require('express');
 const authMiddleware = require('../middlewares/authe');
-const { storage, ID, client } = require('../config/appwrite.config');
+const { storage, ID } = require('../config/appwrite.config');
 const fileModel = require('../models/files.models');
 const fs = require('fs');
 const router = express.Router();
@@ -26,45 +26,46 @@ router.post("/upload", authMiddleware, upload.single("file"), async (req, res) =
 
     try {
         const fileId = ID.unique();
-        
-        // Read file content
         const fileData = fs.readFileSync(req.file.path);
 
-        // Upload file to Appwrite Storage
+        // Upload to Appwrite
         const uploadedFile = await storage.createFile(
-            process.env.APPWRITE_BUCKET_ID,
+            '67b8d5c5000a9b9feb4e', // bucketId
             fileId,
-            Buffer.from(fileData),
-            ['role:all']
+            fileData
         );
 
-        // Save file details in DB
+        // Save file metadata to MongoDB
         const newFile = await fileModel.create({
-            path: uploadedFile.$id,
+            fileId: uploadedFile.$id,
             originalname: req.file.originalname,
-            user: req.user.userId,
+            size: req.file.size,
+            mimeType: req.file.mimetype,
+            user: req.user.userId
         });
 
-        // Clean up: Delete temporary file
+        // Clean up temporary file
         fs.unlinkSync(req.file.path);
 
         res.redirect('/home');
     } catch (error) {
         console.error("File upload error:", error);
-        // Clean up on error
         if (req.file && req.file.path) {
             fs.unlinkSync(req.file.path);
         }
-        res.status(500).json({ message: "File upload failed", error: error.message });
+        res.status(500).json({ 
+            message: "File upload failed", 
+            error: error.message 
+        });
     }
 });
 
 // 📥 Route: Download File (Generate Signed URL)
-router.get('/download/:path', authMiddleware, async (req, res) => {
+router.get('/download/:fileId', authMiddleware, async (req, res) => {
     try {
-        const fileId = req.params.path;
+        const fileId = req.params.fileId;
         const file = await fileModel.findOne({
-            path: fileId,
+            fileId: fileId,
             user: req.user.userId
         });
 
@@ -80,7 +81,7 @@ router.get('/download/:path', authMiddleware, async (req, res) => {
         res.redirect(result.href);
     } catch (error) {
         console.error('Download error:', error);
-        res.status(500).json({ message: 'Download failed' });
+        res.status(500).json({ message: 'Download failed', error: error.message });
     }
 });
 

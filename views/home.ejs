@@ -90,13 +90,12 @@
             <div class="p-2 cursor-pointer rounded-md bg-gray-300 flex justify-between">
                 <h1><%= file.originalname %></h1>
                 <a
-                    href="/download/<%= file.path %>"
+                    href="/download/<%= file.fileId %>"
                     class="text-blue-500 hover:text-blue-700"
                     download="<%= file.originalname %>"
                 >
                     <i class="ri-download-line"></i>
                 </a>
-
             </div>
             <% }) %>
         </div>
